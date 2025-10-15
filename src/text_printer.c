@@ -118,25 +118,26 @@ void RunTextPrinters(void)
 
     do
     {
-        int numEmpty = 0
+        int numEmpty = 0;
         for (i = 0; i < NUM_TEXT_PRINTERS; ++i)
         {
-            if (sTextPrinters[i].active != 0)
+            if (sTextPrinters[i].active)
             {
-                temp = RenderFont(&sTextPrinters[i]);
-                switch (temp) {
-                    case 0:
+                u16 renderCmd = RenderFont(&sTextPrinters[i]);
+                switch (renderCmd)
+                {
+                    case RENDER_PRINT:
                         CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, COPYWIN_GFX);
                         if (sTextPrinters[i].callback != 0)
-                            sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, temp);
+                            sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, renderCmd);
                         break;
-                    case 3:
-                        if (sTextPrinters[i].callback != 0)
-                            sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, temp);
+                    case RENDER_UPDATE:
+                        if (sTextPrinters[i].callback != NULL)
+                            sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, renderCmd);
                         return;
-                    case 1:
-                        sTextPrinters[i].active = 0;
-                        break;
+                    case RENDER_FINISH:
+                        sTextPrinters[i].active = FALSE;
+                        return;
                 }
             }
             else
@@ -144,7 +145,7 @@ void RunTextPrinters(void)
                 numEmpty++;
             }
         }
-        if(numEmpty == NUM_TEXT_PRINTERS)
+        if(numEmpty == 0x20)
             return;
     }while(gSaveBlock2Ptr->optionsTextSpeed == OPTIONS_TEXT_SPEED_INSTANT);
 }
